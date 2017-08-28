@@ -20,6 +20,9 @@ var water;
 var oil;
 var sunlight;
 var intervalNumber;
+var states;
+var state;
+var genIsMouseover;
 
 function startLoading() {
 	canvas = document.getElementById("canvas");
@@ -55,14 +58,14 @@ function startLoading() {
 		nuclearWaste: 3,
 	};
 	gens = {//not actually gens but instead buyables, too lazy to change
-		lemon: {name: "Lemon", desc: "A citrusy fruit with an shocking electric charge inside it", amt: 1, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 1, type: "GreenEnergy", cost: 5},
-		waterwheel: {name: "Waterwheel", desc: "A wheel turned by a river. It powers a generator", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.water, baseOut: 2, input: 5, nonConsume: true, researchRequired: "Waterwheels", type: "GreenEnergy", cost: 9},
-		oilDrill: {name: "Oil Drill", desc: "A primitive drill that slowly lifts up oil", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.energy, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 10},
-		oilEngine: {name: "Oil Generator", desc: "A standard-issue combustion engine that uses oil and generates energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 12},
-		oilBurner: {name: "Oil-powered Water Heater", desc: "A machine that uses the heat from burning oil to heat water and turn turbines", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 10, input: 4, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 15},
-		windTurbine: {name: "Wind Turbine", desc: "A device that uses wind to generate energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, researchRequired: "Wind Turbines", type: "GreenEnergy", cost: 20},
-		hydroDam: {name: "Hydroelectric Dam", desc: "An improved waterwheel, the Hydroelectric Dam's turbines are much more efficient", amt: 0, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, input: 9, researchRequired: "Hydroelectric Dams", type: "GreenEnergy", cost: 18},
-		biofuelMaker: {name: "Biofuel Maker", desc: "A bio-fuel generating device, it makes gas out of crops", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.food, baseOut: 2, input: 1, researchRequired: "Biofuel", type: "GreenEnergy", cost: 10},
+		lemon: {name: "Lemon", desc: "A citrusy fruit with a shocking<br>electric charge inside it", amt: 1, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 1, type: "GreenEnergy", cost: 5},
+		waterwheel: {name: "Waterwheel", desc: "A wheel turned by a river.<br>It powers a generator", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.water, baseOut: 2, input: 5, nonConsume: true, researchRequired: "Waterwheels", type: "GreenEnergy", cost: 9},
+		oilDrill: {name: "Oil Drill", desc: "A primitive drill<br>that slowly lifts up oil", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.energy, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 10},
+		oilEngine: {name: "Oil Generator", desc: "A standard-issue combustion engine<br>that uses oil and generates energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 12},
+		oilBurner: {name: "Oil-powered Water Heater", desc: "A machine that uses the heat<br>from burning oil to heat water and turn turbines", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 10, input: 4, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 15},
+		windTurbine: {name: "Wind Turbine", desc: "A device that uses<br>wind to generate energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, researchRequired: "Wind Turbines", type: "GreenEnergy", cost: 20},
+		hydroDam: {name: "Hydroelectric Dam", desc: "An improved waterwheel,<br>the Hydroelectric Dam's turbines are much more efficient", amt: 0, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, input: 9, researchRequired: "Hydroelectric Dams", type: "GreenEnergy", cost: 18},
+		biofuelMaker: {name: "Biofuel Maker", desc: "A bio-fuel generating device,<br>it makes gas out of crops", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.food, baseOut: 2, input: 1, researchRequired: "Biofuel", type: "GreenEnergy", cost: 10},
 		battery: {name: "Battery", desc: "A device for storing energy", amt: 0, isStorage: true, storageBaseAmt: 100, storeMultiplier: 1, researchRequired: "Batteries",  type: "Storage", cost: 20}
 	};
 	research = {
@@ -140,6 +143,15 @@ function startLoading() {
 		civ11: "Robots",
 	};
 	intervalNumber = 0;
+	states = {
+		genBuy: 1,
+		shipyard: 2,
+		populationManage: 3,
+	};
+	genIsMouseover = {
+		lemon: false,
+	}
+	state = states.genBuy;
 	interval = setInterval(hasLoaded, 250);
 }
 
@@ -177,6 +189,58 @@ function addEnergy() {
 	}
 }
 
+function render() {
+	if (state === 1) {
+		renderBuyGen("lemon", 50, 50);
+	};
+}
+
+function renderBuyGen(gen, x, y) {
+	var genToDraw = gens[gen];
+	ctx.fillStyle = "Blue";
+	ctx.fillRect(x, y, 200, 80);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(x + 2, y + 2, 196, 76);
+	if (genIsMouseover.lemon === false) {
+		ctx.fillStyle = "Black";
+		ctx.font = "12px Arial";
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		ctx.fillText(genToDraw.name, x + 10, y + 20);
+		ctx.fillText("Amount: " + genToDraw.amt, x + 10, y + 40);
+		ctx.fillText("Cost: " + genToDraw.cost, x + 10, y + 60);
+		drawImage("https://i.redd.it/bo2luzz1wlhz.png", x + 140, y + 20);
+	} else {
+		ctx.fillStyle = "Black";
+		ctx.font = "12px Arial";
+		ctx.textAlign = "left";
+		ctx.textBaseline = "middle";
+		var descFormatted = genToDraw.desc.split("<br>");
+		for (var i = 0; i < descFormatted.length; i++) {
+			ctx.fillText(descFormatted[i], x + 10, y + ((20*i) + 20));
+		}
+	};
+}
+
+function drawImage(img, x, y) {
+	var bar = new Image();
+	bar.src = img;
+	bar.onload = function() {
+		ctx.drawImage(bar, x, y);
+	}
+}
+
+function mouseHandler(event) {
+	var mouseX = event.pageX;
+	var mouseY = event.pageY;
+	if (mouseX >= 50 && mouseX <= 250 && mouseY >= 50 && mouseY <= 130) {
+		console.log("yeah");
+		genIsMouseover.lemon = true;
+	} else {
+		genIsMouseover.lemon = false;
+	};
+}
+
 function hasLoaded() {
 	clearInterval(interval);
 	startGame();
@@ -184,10 +248,15 @@ function hasLoaded() {
 
 function startGame() {
 	interval = setInterval(runGame, 100);
+	render();
+	$("#canvas").mousemove(mouseHandler);
 }
 
 function runGame() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	intervalNumber++;
 	changeFood();
 	addEnergy();
+	render();
+	ctx.strokeRect(0, 0, canvas.width, canvas.height);
 }
