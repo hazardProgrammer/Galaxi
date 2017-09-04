@@ -59,21 +59,22 @@ function startLoading() {
 	};
 	gens = {//not actually gens but instead buyables, too lazy to change
 		lemon: {name: "Lemon", desc: "A citrusy fruit with a shocking<br>electric charge inside it", amt: 1, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 1, type: "GreenEnergy", cost: 5},
-		waterwheel: {name: "Waterwheel", desc: "A wheel turned by a river.<br>It powers a generator", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.water, baseOut: 2, input: 5, nonConsume: true, researchRequired: "Waterwheels", type: "GreenEnergy", cost: 9},
+		waterwheel: {name: "Waterwheel", desc: "A wheel turned by a river.<br>It powers a generator", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.none, baseOut: 2, nonConsume: true, researchRequired: "Waterwheels", type: "GreenEnergy", cost: 9},
 		oilDrill: {name: "Oil Drill", desc: "A primitive drill<br>that slowly lifts up oil", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.energy, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 10},
 		oilEngine: {name: "Oil Generator", desc: "A standard-issue combustion engine<br>that uses oil and generates energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 2, input: 1, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 12},
 		oilBurner: {name: "Oil-powered Water Heater", desc: "A machine that uses the heat<br>from burning oil to heat water and turn turbines", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.oil, baseOut: 10, input: 4, researchRequired: "Oil Mechanisms", type: "FossilFuel", cost: 15},
 		windTurbine: {name: "Wind Turbine", desc: "A device that uses<br>wind to generate energy", amt: 0, prodMultiplier: 1, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, researchRequired: "Wind Turbines", type: "GreenEnergy", cost: 20},
 		hydroDam: {name: "Hydroelectric Dam", desc: "An improved waterwheel,<br>the Hydroelectric Dam's turbines are much more efficient", amt: 0, outputType: outputs.energy, inputType: inputs.nothing, baseOut: 4, input: 9, researchRequired: "Hydroelectric Dams", type: "GreenEnergy", cost: 18},
 		biofuelMaker: {name: "Biofuel Maker", desc: "A bio-fuel generating device,<br>it makes gas out of crops", amt: 0, prodMultiplier: 1, outputType: outputs.oil, inputType: inputs.food, baseOut: 2, input: 1, researchRequired: "Biofuel", type: "GreenEnergy", cost: 10},
-		battery: {name: "Battery", desc: "A device for storing energy", amt: 0, isStorage: true, storageBaseAmt: 100, storeMultiplier: 1, researchRequired: "Batteries",  type: "Storage", cost: 20}
+		battery: {name: "Battery", desc: "A device for storing energy", amt: 0, isStorage: true, storageBaseAmt: 100, storeMultiplier: 1, researchRequired: "Batteries",  type: "Batteries", cost: 20}
 	};
 	research = {
-		waterwheels: {cost: 25, researchTime: 15 /*seconds*/, name: "Waterwheels", unlock: 200},
-		oilMechanisms: {cost: 40, researchTime: 25, name: "Oil Mechanisms", unlock: 500},
-		windTurbines: {cost: 60, researchTime: 30, name: "Wind Turbines", unlock: 1200},
-		hydroelectric: {cost: 75, researchTime: 45, name: "Hydroelectric Dams", unlock: 5000},
-		biofuel: {cost: 80, researchTime: 40, name: "Biofuel", unlock: 10000},
+		waterwheels: {cost: 25, researchTime: 15 /*seconds*/, name: "Waterwheels", unlock: 200, has: false},
+		oilMechanisms: {cost: 40, researchTime: 25, name: "Oil Mechanisms", unlock: 500, has: false},
+		windTurbines: {cost: 60, researchTime: 30, name: "Wind Turbines", unlock: 1200, has: false},
+		hydroelectric: {cost: 75, researchTime: 45, name: "Hydroelectric Dams", unlock: 5000, has: false},
+		biofuel: {cost: 80, researchTime: 40, name: "Biofuel", unlock: 10000, has: false},
+		battery: {cost: 40, researchTime: 20, name: "Batteries", unlock: 1500, has: false}
 	};
 	upgrades = {
 		production: {wheel: {cost: 10, name: "Invent the wheel", desc: "Doubles all production", effect: 2, unlock: 100 /*all is energy*/}, existence: {cost: 20, name: "Think about existence", desc: "Doubles all production", effect: 2, unlock: 500}, gravity: {cost: 50, name: "Discover Gravity", desc: "Doubles production", effect: 2, unlock: 2500}, lightbulb: {cost: 100, name: "Invent the lightbulb", desc: "Doubles Production", effect: 2, unlock: 6000}},
@@ -145,11 +146,15 @@ function startLoading() {
 	intervalNumber = 0;
 	states = {
 		genBuy: 1,
-		shipyard: 2,
-		populationManage: 3,
+		storage: 2,
+		research: 3,
+		upgrades: 4,
+		shipyard: 5,
+		populationManage: 6,
 	};
 	genIsMouseover = {
 		lemon: false,
+		waterwheel: false,
 	}
 	state = states.genBuy;
 	interval = setInterval(hasLoaded, 250);
@@ -185,14 +190,72 @@ function buyGen(gen) {
 function addEnergy() {
 	if (intervalNumber % 10 === 0) {
 		energy += gens.lemon.amt * gens.lemon.baseOut * gens.lemon.prodMultiplier;
+		energy += gens.waterwheel.amt * gens.waterwheel.baseOut * gens.waterwheel.prodMultiplier;
 		energyTotal += gens.lemon.amt * gens.lemon.baseOut * gens.lemon.prodMultiplier;
+		energyTotal += gens.waterwheel.amt * gens.waterwheel.baseOut * gens.waterwheel.prodMultiplier;
+	}
+	if (energy > 100) {
+		energy = 100;
 	}
 }
 
 function render() {
-	if (state === 1) {
-		renderBuyGen("lemon", 50, 50);
+	ctx.fillStyle = "Blue";
+	ctx.fillRect(0, 0, 800, 50);
+	ctx.fillStyle = "Black";
+	ctx.font = "24px Arial";
+	ctx.textAlign = "left";
+	ctx.textBaseline = "middle";
+	ctx.fillText("Energy: " + energy + "/" + energyCapacity, 50, 25);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.textAlign = "center";
+	ctx.fillRect(450, 10, 50, 30);
+	ctx.fillStyle = "Black";
+	ctx.font = "16px Arial";
+	ctx.fillText("Gens", 475, 25);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(520, 10, 50, 30);
+	ctx.fillStyle = "Black";
+	ctx.font = "14px Arial";
+	ctx.fillText("Storage", 545, 25);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(590, 10, 50, 30);
+	ctx.fillStyle = "Black";
+	ctx.font = "11px Arial";
+	ctx.fillText("Research", 615, 25);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(660, 10, 50, 30);
+	ctx.fillStyle = "Black";
+	ctx.fillText("Upgrades", 685, 25);
+	if (state === states.genBuy) {
+		renderBuyGen("lemon", 80, 80);
+		drawImage("https://i.redd.it/bo2luzz1wlhz.png", 220, 100);
+		if (research.waterwheels.has === true) {
+			renderBuyGen("waterwheel", 520, 80);
+			drawImage("https://i.redd.it/cr6odjxjcwiz.png", 660, 100);
+		};
 	};
+	if (state === states.storage) {
+		ctx.font = "32px Arial";
+		ctx.fillText("STORAGE: BEING IMPLEMENTED", 400, 300)
+	};
+	if (state === states.research) {
+		if (energyTotal >= research.waterwheels.unlock && research.waterwheels.has === false) {
+			renderResearch("waterwheels", 80, 80);
+		};
+	};
+}
+
+function renderResearch(researchName, x, y) {
+	var researchToDraw = research[researchName];
+	ctx.fillStyle = "Blue";
+	ctx.fillRect(x, y, 200, 80);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(x + 2, y + 2, 196, 76);
+	ctx.font = "15px Arial";
+	ctx.textAlign = "left";
+	ctx.fillStyle = "Black";
+	ctx.fillText("Research: " + researchToDraw.name, x + 10, y + 20);
 }
 
 function renderBuyGen(gen, x, y) {
@@ -201,7 +264,7 @@ function renderBuyGen(gen, x, y) {
 	ctx.fillRect(x, y, 200, 80);
 	ctx.fillStyle = "DeepSkyBlue";
 	ctx.fillRect(x + 2, y + 2, 196, 76);
-	if (genIsMouseover.lemon === false) {
+	if (genIsMouseover[gen] === false) {
 		ctx.fillStyle = "Black";
 		ctx.font = "12px Arial";
 		ctx.textAlign = "left";
@@ -209,7 +272,6 @@ function renderBuyGen(gen, x, y) {
 		ctx.fillText(genToDraw.name, x + 10, y + 20);
 		ctx.fillText("Amount: " + genToDraw.amt, x + 10, y + 40);
 		ctx.fillText("Cost: " + genToDraw.cost, x + 10, y + 60);
-		drawImage("https://i.redd.it/bo2luzz1wlhz.png", x + 140, y + 20);
 	} else {
 		ctx.fillStyle = "Black";
 		ctx.font = "12px Arial";
@@ -220,6 +282,11 @@ function renderBuyGen(gen, x, y) {
 			ctx.fillText(descFormatted[i], x + 10, y + ((20*i) + 20));
 		}
 	};
+}
+
+function researchGen(gen) {
+	var toResearch = research[gen];
+	setTimeout(function(){toResearch.has = true}, toResearch.researchTime * 1000);
 }
 
 function drawImage(img, x, y) {
@@ -233,12 +300,42 @@ function drawImage(img, x, y) {
 function mouseHandler(event) {
 	var mouseX = event.pageX;
 	var mouseY = event.pageY;
-	if (mouseX >= 50 && mouseX <= 250 && mouseY >= 50 && mouseY <= 130) {
-		console.log("yeah");
+	if (mouseX >= 80 && mouseX <= 280 && mouseY >= 80 && mouseY <= 160) {
 		genIsMouseover.lemon = true;
 	} else {
 		genIsMouseover.lemon = false;
 	};
+	if (mouseX >= 520 && mouseX <= 720 && mouseY >= 80 && mouseY <= 160) {
+		genIsMouseover.waterwheel = true;
+	} else {
+		genIsMouseover.waterwheel = false;
+	};
+}
+
+function clickHandler(event) {
+	var clickX = event.clientX - canvas.getBoundingClientRect().left;
+    var clickY = event.clientY - canvas.getBoundingClientRect().top;
+    if (clickX >= 80 && clickX <= 280 && clickY >= 80 && clickY <= 160 && state === states.genBuy) {
+    	buyGen("lemon");
+    };
+    if (clickX >= 520 && clickX <= 720 && clickY >= 80 && clickY <= 160 && research.waterwheels.has === true && state === states.genBuy) {
+    	buyGen("waterwheel");
+    };
+    if (clickX >= 450 && clickX <= 500 && clickY >= 10 && clickY <= 40) {
+    	state = states.genBuy;
+    };
+    if (clickX >= 520 && clickX <= 570 && clickY >= 10 && clickY <= 40) {
+    	state = states.storage;
+    };
+    if (clickX >= 590 && clickX <= 640 && clickY >= 10 && clickY <= 40) {
+    	state = states.research;
+    };
+    if (clickX >= 660 && clickX <= 710 && clickY >= 10 && clickY <= 40) {
+    	state = states.upgrades;
+    };
+    if (clickX >= 80 && clickX <= 280 && clickY >= 80 && clickY <= 160 && state === states.research && energyTotal >= research.waterwheels.unlock) {
+    	researchGen("waterwheels");
+    };
 }
 
 function hasLoaded() {
@@ -250,6 +347,7 @@ function startGame() {
 	interval = setInterval(runGame, 100);
 	render();
 	$("#canvas").mousemove(mouseHandler);
+	$("#canvas").click(clickHandler);
 }
 
 function runGame() {
