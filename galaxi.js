@@ -77,7 +77,7 @@ function startLoading() {
 		battery: {cost: 40, researchTime: 20, name: "Batteries", unlock: 1500, has: false}
 	};
 	upgrades = {
-		production: {wheel: {cost: 10, name: "Invent the wheel", desc: "Doubles all production", effect: 2, unlock: 100 /*all is energy*/}, existence: {cost: 20, name: "Think about existence", desc: "Doubles all production", effect: 2, unlock: 500}, gravity: {cost: 50, name: "Discover Gravity", desc: "Doubles production", effect: 2, unlock: 2500}, lightbulb: {cost: 100, name: "Invent the lightbulb", desc: "Doubles Production", effect: 2, unlock: 6000}},
+		production: {wheel: {cost: 10, name: "Invent the wheel", desc: "Doubles all production", effect: 2, unlock: 100 /*all is energy*/, has: false}, existence: {cost: 20, name: "Think about existence", desc: "Doubles all production", effect: 2, unlock: 500, has: false}, gravity: {cost: 50, name: "Discover Gravity", desc: "Doubles production", effect: 2, unlock: 2500, has: false}, lightbulb: {cost: 100, name: "Invent the lightbulb", desc: "Doubles Production", effect: 2, unlock: 6000, has: false}},
 		lemon: {organic: {cost: 10, name: "Organic Lemons", desc: "Doubles lemon production", effect: 2, unlock: 5}, lemonade: {cost: 20, name: "Lemonade", desc: "Doubles lemon production", effect: 2, unlock: 15}, sour: {cost: 30, name: "Ultra Sourness", desc: "Doubles lemon production", effect: 2, unlock: 30}, gmo: {cost: 40, name: "GMO lemons", desc: "Doubles lemon production", effect: 2, unlock: 50}},
 	};
 	population = 5;
@@ -244,6 +244,24 @@ function render() {
 			renderResearch("waterwheels", 80, 80);
 		};
 	};
+	if (state === states.upgrades) {
+		if (energyTotal >= upgrades.production.wheel.unlock && upgrades.production.wheel.has === false) {
+			renderUpgrade("wheel", "production", 80, 80);
+		};
+	};
+}
+
+function renderUpgrade(upgradeName, upgradeOther, x, y) {
+	var upgradeToDraw = upgrades[upgradeOther][upgradeName];
+	ctx.fillStyle = "Blue";
+	ctx.fillRect(x, y, 200, 80);
+	ctx.fillStyle = "DeepSkyBlue";
+	ctx.fillRect(x + 2, y + 2, 196, 76);
+	ctx.font = "15px Arial";
+	ctx.textAlign = "left";
+	ctx.fillStyle = "Black";
+	ctx.fillText("Upgrade: " + upgradeToDraw.name, x + 10, y + 20);
+	ctx.fillText(upgradeToDraw.desc, x + 10, y + 40);
 }
 
 function renderResearch(researchName, x, y) {
@@ -287,6 +305,11 @@ function renderBuyGen(gen, x, y) {
 function researchGen(gen) {
 	var toResearch = research[gen];
 	setTimeout(function(){toResearch.has = true}, toResearch.researchTime * 1000);
+}
+
+function researchUpgrade(upgradeRes, division) {
+	var res = upgrades[division][upgradeRes];
+	res.has = true;
 }
 
 function drawImage(img, x, y) {
@@ -335,6 +358,10 @@ function clickHandler(event) {
     };
     if (clickX >= 80 && clickX <= 280 && clickY >= 80 && clickY <= 160 && state === states.research && energyTotal >= research.waterwheels.unlock) {
     	researchGen("waterwheels");
+    };
+    if (clickX >= 80 && clickX <= 280 && clickY >= 80 && clickY <= 160 && state === states.upgrades && energyTotal >= upgrades.production.wheel.unlock) {
+    	console.log("click");
+    	researchUpgrade("wheel", "production");
     };
 }
 
